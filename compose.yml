@@ -1,0 +1,57 @@
+services:
+  qwen-flash-next:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    container_name: qwen-flash-next
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - ./models:/models
+
+    environment:
+      LLAMA_CACHE: /models/cache
+
+      LLAMA_ARG_HF_REPO: "AtomicChat/Qwen3.8-Flash-Next-GGUF:Q4_K_M"
+
+      LLAMA_ARG_HOST: "0.0.0.0"
+      LLAMA_ARG_PORT: "8080"
+      LLAMA_ARG_ALIAS: "qwen3.8-flash-next"
+
+      LLAMA_ARG_CTX_SIZE: "65536"
+      LLAMA_ARG_KV_OFFLOAD: "1"
+      LLAMA_ARG_N_PARALLEL: "1"
+      LLAMA_ARG_TIMEOUT: "7200"
+
+      LLAMA_ARG_THREADS: "32"
+      LLAMA_ARG_THREADS_BATCH: "64"
+
+      LLAMA_ARG_CPU_MOE: "1"
+      LLAMA_ARG_N_GPU_LAYERS: "all"
+      
+      LLAMA_ARG_FIT: "off"
+      LLAMA_ARG_CTX_CHECKPOINTS: "32"
+
+      LLAMA_ARG_CACHE_TYPE_K: "q4_0"
+      LLAMA_ARG_CACHE_TYPE_V: "q4_0"
+
+      LLAMA_ARG_FLASH_ATTN: "on"
+      LLAMA_ARG_MMPROJ_AUTO: "false"
+
+      LLAMA_ARG_ENDPOINT_METRICS: "1"
+      LLAMA_ARG_PERF: "1"
+
+      LLAMA_ARG_LAZY_MODE: "off"
+      LLAMA_ARG_LOAD_MODE: "none"
+
+      LLAMA_ARG_BATCH: "8192"
+      LLAMA_ARG_UBATCH: "704"
+
+      LLAMA_ARG_CACHE_PROMPT: "1"
+      LLAMA_ARG_CACHE_RAM: "32768"
+      LLAMA_ARG_CACHE_IDLE_SLOTS: "1"
+
+      LLAMA_ARG_LOG_VERBOSITY: "4"
+
+    gpus: all
