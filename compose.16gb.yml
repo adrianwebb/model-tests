@@ -20,8 +20,8 @@ services:
       LLAMA_ARG_ALIAS: "qwen3.8-flash-next"
 
       # Context
-      LLAMA_ARG_CTX_SIZE: "500000"
-      LLAMA_ARG_N_PARALLEL: "5"
+      LLAMA_ARG_CTX_SIZE: "153600"
+      LLAMA_ARG_N_PARALLEL: "1"
       LLAMA_ARG_TIMEOUT: "7200"
 
       # CPU
@@ -50,10 +50,10 @@ services:
       LLAMA_ARG_LAZY_MODE: "off"
 
       # Hybrid-model context checkpoints / prompt cache
-      LLAMA_ARG_CTX_CHECKPOINTS: "16"
+      LLAMA_ARG_CTX_CHECKPOINTS: "32"
       LLAMA_ARG_CACHE_PROMPT: "1"
-      LLAMA_ARG_CACHE_RAM: "0"
-      LLAMA_ARG_CACHE_IDLE_SLOTS: "0"
+      LLAMA_ARG_CACHE_RAM: "10240"
+      LLAMA_ARG_CACHE_IDLE_SLOTS: "1"
 
       # Image processing
       LLAMA_ARG_MMPROJ_AUTO: "true"
