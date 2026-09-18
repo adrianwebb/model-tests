@@ -1,0 +1,68 @@
+services:
+  qwen-flash-next:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    container_name: qwen-flash-next
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - ./models:/models
+
+    environment:
+      LLAMA_CACHE: /models/cache
+
+      LLAMA_ARG_HF_REPO: "AtomicChat/Qwen3.8-Flash-Next-GGUF:Q4_K_M"
+
+      LLAMA_ARG_HOST: "0.0.0.0"
+      LLAMA_ARG_PORT: "8080"
+      LLAMA_ARG_ALIAS: "qwen3.8-flash-next"
+
+      # Context
+      LLAMA_ARG_CTX_SIZE: "500000"
+      LLAMA_ARG_N_PARALLEL: "5"
+      LLAMA_ARG_TIMEOUT: "7200"
+
+      # CPU
+      LLAMA_ARG_THREADS: "10"
+      LLAMA_ARG_THREADS_BATCH: "10"
+
+      # Hybrid GPU / CPU placement
+      LLAMA_ARG_CPU_MOE: "1"
+      LLAMA_ARG_N_GPU_LAYERS: "all"
+
+      # AtomicChat says auto-fit is incorrect for this architecture.
+      LLAMA_ARG_FIT: "off"
+
+      # KV / attention
+      LLAMA_ARG_KV_OFFLOAD: "1"
+      LLAMA_ARG_CACHE_TYPE_K: "q4_0"
+      LLAMA_ARG_CACHE_TYPE_V: "q4_0"
+      LLAMA_ARG_FLASH_ATTN: "on"
+
+      # Token prefill processing
+      LLAMA_ARG_BATCH: "9216"
+      LLAMA_ARG_UBATCH: "3072"
+
+      # Memory management
+      LLAMA_ARG_LOAD_MODE: "none"
+      LLAMA_ARG_LAZY_MODE: "off"
+
+      # Hybrid-model context checkpoints / prompt cache
+      LLAMA_ARG_CTX_CHECKPOINTS: "16"
+      LLAMA_ARG_CACHE_PROMPT: "1"
+      LLAMA_ARG_CACHE_RAM: "0"
+      LLAMA_ARG_CACHE_IDLE_SLOTS: "0"
+
+      # Image processing
+      LLAMA_ARG_MMPROJ_AUTO: "true"
+      LLAMA_ARG_IMAGE_MIN_TOKENS: "1024"
+      LLAMA_ARG_MMPROJ_OFFLOAD: "false"
+
+      # Logging and output
+      LLAMA_ARG_ENDPOINT_METRICS: "1"
+      LLAMA_ARG_PERF: "1"
+      LLAMA_ARG_LOG_VERBOSITY: "3"
+
+    gpus: all
