@@ -42,8 +42,8 @@ services:
       LLAMA_ARG_FLASH_ATTN: "on"
 
       # Token prefill processing
-      LLAMA_ARG_BATCH: "9216"
-      LLAMA_ARG_UBATCH: "3072"
+      LLAMA_ARG_BATCH: "10752"
+      LLAMA_ARG_UBATCH: "3584"
 
       # Memory management
       LLAMA_ARG_LOAD_MODE: "none"
