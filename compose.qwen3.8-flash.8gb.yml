@@ -3,6 +3,7 @@ services:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
     container_name: qwen-flash-next
     restart: unless-stopped
+    gpus: all
 
     ports:
       - "8080:8080"
@@ -11,77 +12,58 @@ services:
       - ./models:/models
 
     environment:
-      LLAMA_CACHE: /models/cache
-
+      # Model selection
+      LLAMA_ARG_ALIAS: "qwen3.8-flash-next"
       LLAMA_ARG_HF_REPO: "AtomicChat/Qwen3.8-Flash-Next-GGUF:Q4_K_M"
 
+      # Model storage
+      LLAMA_CACHE: /models/cache
+
+      # Networking
       LLAMA_ARG_HOST: "0.0.0.0"
       LLAMA_ARG_PORT: "8080"
-      LLAMA_ARG_ALIAS: "qwen3.8-flash-next"
-
-      # 2026-09-26 caching investigation, concluded: unified KV (-np -1 +
-      # KV_UNIFIED 1) crashed b10920 on the FIRST mid-size prompt, three times
-      # (checkpoints-off and cache-trio-off each already ruled out; host RAM
-      # 148GB free). Upstream bug for this model family: hybrid GDN
-      # (Qwen3-Next-class) + unified/prefix-cache on CUDA — llama.cpp #23210,
-      # #21401. REVERTED to the known-good single slot: interleaved sessions
-      # reuse only their shared prefix (LCP pin measured at 9,617 tokens).
-      # To retest once the image is upgraded: N_PARALLEL "-1" + KV_UNIFIED "1"
-      # (and measure: node var/prefix-swap-test.mjs — pass = cached_tokens
-      # climbing past the shared prefix when chains interleave).
-      LLAMA_ARG_CTX_SIZE: "65536"
-      # VALIDATED WINNING CONFIG 2026-09-27 (build b11176): unified on with
-      # auto slots (resolves to 1 here) — fan-out chains' tails now RESTORE
-      # across interleaving (contention probe CONCUR=3: passed, all chains at
-      # hit 0.997-0.998 within one turn of a collision; max 1 fallback turn
-      # to the shared prefix). The b10920 crash is gone on this build even
-      # though #23210 remains open upstream. Do NOT force N_PARALLEL > 1 —
-      # auto/1-slot is the validated shape; multi-slot was the crashing path.
-      # Retest after any image upgrade: scripts/prefix-swap-test.mjs then
-      # E2E_CACHE_CONCURRENCY=3 npm run test:e2e:cache (in the plugin repo).
-      LLAMA_ARG_N_PARALLEL: "-1"
-      LLAMA_ARG_KV_UNIFIED: "1"
-      LLAMA_ARG_KV_OFFLOAD: "1"
       LLAMA_ARG_TIMEOUT: "7200"
 
+      # Context
+      LLAMA_ARG_CTX_SIZE: "65536"
+      LLAMA_ARG_N_PARALLEL: "-1"
+      LLAMA_ARG_CTX_CHECKPOINTS: "32"    
+
+      # CPU
       LLAMA_ARG_THREADS: "32"
       LLAMA_ARG_THREADS_BATCH: "64"
 
+      # Hybrid GPU / CPU placement
       LLAMA_ARG_CPU_MOE: "1"
       LLAMA_ARG_N_GPU_LAYERS: "all"
       
-      LLAMA_ARG_FIT: "off"
-      # 32 = upstream default; DO NOT set 0 on this build. Measured 2026-09-26
-      # twice: with 0, every request reports cached_tokens=0 — even the shared
-      # prefix (21,277) that a mid-sentence A/B chain pair reuse at 32. On
-      # b10920 checkpoints carry the attention-layer prefix reuse too, not just
-      # the recurrent state (#24055's invalidation is partial, not total).
-      # They were NOT the unified-mode crash cause either (crash persisted at 0).
-      LLAMA_ARG_CTX_CHECKPOINTS: "32"
+      # AtomicChat says auto-fit is incorrect for this architecture.
+      LLAMA_ARG_FIT: "off"      
 
+      # KV / attention
+      LLAMA_ARG_KV_UNIFIED: "1"
+      LLAMA_ARG_KV_OFFLOAD: "1"
       LLAMA_ARG_CACHE_TYPE_K: "q4_0"
       LLAMA_ARG_CACHE_TYPE_V: "q4_0"
-
       LLAMA_ARG_FLASH_ATTN: "on"
-      LLAMA_ARG_MMPROJ_AUTO: "false"
 
-      LLAMA_ARG_ENDPOINT_METRICS: "1"
-      LLAMA_ARG_PERF: "1"
-
-      LLAMA_ARG_LAZY_MODE: "off"
-      LLAMA_ARG_LOAD_MODE: "none"
-
+      # Token prefill processing
       LLAMA_ARG_BATCH: "8192"
       LLAMA_ARG_UBATCH: "704"
 
-      # Restored to their original values: with single-slot classic KV these
-      # are inert (idle-slot prompt-cache save/restore requires unified mode,
-      # llama.cpp #22942 — which is why they sat unused for months and why
-      # enabling unified lit them up right before the crashes).
+      # Memory management
+      LLAMA_ARG_LAZY_MODE: "off"
+      LLAMA_ARG_LOAD_MODE: "none"
+
+      # Model prompt cache
       LLAMA_ARG_CACHE_PROMPT: "1"
       LLAMA_ARG_CACHE_RAM: "32768"
       LLAMA_ARG_CACHE_IDLE_SLOTS: "1"
 
-      LLAMA_ARG_LOG_VERBOSITY: "4"
+      # Image processing      
+      LLAMA_ARG_MMPROJ_AUTO: "false"
 
-    gpus: all
+      # Logging and output
+      LLAMA_ARG_ENDPOINT_METRICS: "1"
+      LLAMA_ARG_PERF: "1"
+      LLAMA_ARG_LOG_VERBOSITY: "3"
